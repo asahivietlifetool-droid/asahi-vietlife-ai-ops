@@ -1,0 +1,8 @@
+﻿ID,Việc,Doanh nghiệp,Người phụ trách,Hạn,Trạng thái,Ghi chú
+T001,Gọi 足立保健所 tư vấn 美容所 (mang mặt bằng + thiết bị),Yume,Nhân viên A,2026-11-05,Chưa,xem YUME_LEGAL
+T002,Tạo LINE công式 Yume Spa (gói miễn phí),Yume,Nhân viên A,2026-11-03,Chưa,
+T003,Dán link LINE/Facebook vào website (i18n.js),Yume,Chủ,2026-11-05,Chưa,repo yume-spa-website
+T004,Chốt giá menu khai trương,Yume,Chủ,2026-11-08,Chưa,giá hiện là dự kiến
+T005,"Chụp ảnh quán sau thi công, thay ảnh web",Yume,Nhân viên A,2026-11-25,Chưa,
+T006,Tạo Google Business Profile Yume Spa,Yume,Chủ,2026-11-15,Chưa,cần địa chỉ
+T007,Tạo Google Sheet này từ xlsx và chia sẻ Claude,Chung,Chủ,2026-10-31,Chưa,

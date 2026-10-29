@@ -1,0 +1,9 @@
+﻿ID,Dịch vụ/Việc,Luật,Yêu cầu,Người xác nhận,Hạn,Trạng thái,Ghi chú
+L1,Nail,—,Không cần giấy phép; vệ sinh dụng cụ,Chủ,2026-11-10,Chưa,
+L2,Gội đầu có nước / head spa,美容師法,"美容師免許 + 美容所開設届 (保健所), phí 24.000円",足立保健所,2026-11-05,Chưa,nếu không có 美容師 → dry head spa
+L3,Chăm sóc da mặt,薬機法/景表法,Máy = 美容機器; không quảng cáo hiệu quả y tế,Chủ,2026-11-10,Chưa,
+L4,Nối mi (fanpage ghi Lashes),美容師法,Cần 美容師免許 + 美容所,Chủ,2026-11-05,Chưa,chưa có → gỡ khỏi fanpage
+L5,Chữ マッサージ trên menu/biển/web,あん摩法,Không dùng,Chủ,2026-11-01,Chưa,đã không dùng trên web
+L6,開設届 nộp 保健所 (nếu cần),美容師法,Trước khai trương ≥ 15 ngày,Nhân viên A,2026-11-25,Chưa,
+L7,Hợp đồng thuê cho phép salon,Dân sự,Kiểm tra điều khoản,Chủ,2026-11-03,Chưa,
+L8,Bảo hiểm 施設賠償責任,Tự nguyện,Mua trước khai trương,Chủ,2026-11-30,Chưa,
