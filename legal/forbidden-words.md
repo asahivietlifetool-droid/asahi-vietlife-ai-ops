@@ -25,7 +25,7 @@ Căn cứ: 薬機法 (hiệu quả mỹ phẩm/thiết bị), 景品表示法 (q
 | Cảm nhận khách | 「〇〇な気分に」「〇〇を目指す」「〇〇をサポート」 | cảm giác, hướng tới, hỗ trợ | feel, aim for, support |
 
 ## 3. Câu mẫu an toàn
-- JA: 頭皮をやさしくほぐし、首や肩の重さを忘れるリラックスタイム。
+- JA: 頭皮にやさしく触れながら、ゆったりとお過ごしいただく時間です。（「首や肩の重さを忘れる」は症状緩和の含みがあるため使わない）
 - JA: やさしいクレンジングと保湿で、肌にうるおいを与え、キメを整えます。
 - VI: Làm sạch dịu nhẹ và dưỡng ẩm, giúp da mềm, mịn và đều hơn.
 - EN: Gentle cleansing and moisture that leave skin soft, smooth and even.
