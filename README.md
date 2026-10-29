@@ -21,8 +21,11 @@ Nguyên tắc (chốt sau đối chất Claude ↔ ChatGPT ngày 29/10/2026, xem
 | 7 | Fanpage du lịch | ChatGPT task đã có | hàng tuần | `agents/07-travel-fanpage-chatgpt.md` |
 | 8 | Kịch bản & caption media | Claude / ChatGPT | trước buổi quay | `agents/08-media-script-caption.md` |
 | 9 | Quay – dựng – đăng (người) | điện thoại + CapCut + Canva | 1 buổi/tuần | `agents/09-media-production-sop.md` |
+| 10 | Kiểm duyệt chất lượng & tuân thủ | Claude (trước mỗi lần "Đã duyệt") | theo bài | `agents/10-quality-compliance.md` |
 
 ## Thư mục
+- `CLAUDE.md` – luật cứng + cách làm việc; mọi phiên Claude mở repo tự đọc.
+- `reports/`, `content/` – đầu ra của scheduled task hàng tuần (tự push).
 - `apps/` – **app chạy trên máy** (1 file HTML, mở là chạy, offline): `yume-ops-desk.html` (sổ hẹn, việc, nội dung, soát từ cấm, brief sáng, prompt AI) và `asahi-inquiry-desk.html` (phiếu yêu cầu tour + thư trả lời không giá). Xem `apps/README.md`.
 - `agents/` – prompt + đầu vào/đầu ra + điều kiện dừng của từng vai trò. Dán nguyên prompt vào Claude/ChatGPT.
 - `legal/` – từ cấm (薬機法・景表法・あん摩法), checklist giấy phép spa, ghi chú 旅行業法.
