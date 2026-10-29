@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Asahi Inquiry Desk – phiếu yêu cầu tour (offline)</title>
+<!--
+  ASAHI INQUIRY DESK v1 — app một file, chạy offline. Nhập yêu cầu của khách/đại lý → ra (1) phiếu yêu cầu chuẩn để nhập App báo giá,
+  (2) nháp trả lời VI/EN/JA (mẫu, KHÔNG có giá), (3) CSV lưu theo dõi. Dữ liệu ở localStorage máy này. Không gọi AI, không tốn tiền.
+-->
+<style>
+:root{--silk:#F8F4EC;--night:#2B2434;--gold:#C8A04A;--gold2:#8A6620;--ink:#262129;--soft:#5E5664;--line:rgba(138,102,32,.28)}
+*{box-sizing:border-box}body{margin:0;font-family:"Noto Sans","Noto Sans JP","Segoe UI","Hiragino Sans",system-ui,sans-serif;font-size:15px;color:var(--ink);background:var(--silk);line-height:1.55}
+header{background:var(--night);color:#F5EFE3;padding:14px 26px;display:flex;align-items:baseline;gap:14px}header h1{font-family:"Cormorant Garamond",Georgia,serif;font-weight:500;font-size:24px;margin:0}header span{color:#B9B0A4;font-size:13px}
+main{max-width:1200px;margin:0 auto;padding:20px 26px;display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:16px 18px}
+h2{font-size:16px;margin:0 0 10px}label{display:block;font-size:12px;color:var(--soft);margin:8px 0 3px}
+input,select,textarea{width:100%;font:inherit;padding:8px 10px;border:1px solid var(--line);border-radius:8px}textarea{min-height:90px}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}.row3{grid-template-columns:1fr 1fr 1fr}
+.btn{font:inherit;padding:8px 14px;border-radius:999px;border:1px solid var(--line);background:#fff;cursor:pointer;margin:8px 6px 0 0}.btn.p{background:var(--gold);border-color:var(--gold);font-weight:600}
+pre{white-space:pre-wrap;background:var(--silk);border:1px solid var(--line);border-radius:8px;padding:12px;font:inherit;font-size:14px;min-height:120px}
+table{width:100%;border-collapse:collapse;font-size:13px}th,td{text-align:left;padding:6px;border-bottom:1px solid var(--line)}
+.full{grid-column:1/-1}.hint{font-size:12px;color:var(--soft)}
+@media (max-width:860px){main{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header><h1>Asahi Inquiry Desk</h1><span>Phiếu yêu cầu tour · không có giá · dữ liệu trên máy này</span></header>
+<main>
+<section class="card">
+  <h2>1. Yêu cầu của khách / đại lý</h2>
+  <div class="row"><div><label>Mã yêu cầu</label><input id="code" placeholder="tự tạo"></div><div><label>Ngôn ngữ trả lời</label><select id="lang"><option value="vi">Tiếng Việt</option><option value="en">English</option><option value="ja">日本語</option></select></div></div>
+  <div class="row"><div><label>Loại khách</label><select id="type"><option>Đại lý (B2B)</option><option>Khách lẻ qua đại lý</option></select></div><div><label>Tên công ty / người liên hệ</label><input id="who"></div></div>
+  <div class="row3"><div><label>Ngày đến Nhật</label><input type="date" id="d1"></div><div><label>Ngày rời</label><input type="date" id="d2"></div><div><label>Sân bay đến/đi</label><input id="apt" placeholder="NRT / HND / KIX"></div></div>
+  <div class="row3"><div><label>Người lớn</label><input type="number" id="ad" min="0" value="2"></div><div><label>Trẻ em (tuổi)</label><input id="ch" placeholder="VD: 2 (5, 9)"></div><div><label>Ngân sách/người (nếu có)</label><input id="bud" placeholder="VD: USD 1,500"></div></div>
+  <label>Điểm muốn đi theo thứ tự</label><input id="route" placeholder="Tokyo → Fuji → Kyoto → Osaka">
+  <div class="row3"><div><label>Phòng</label><input id="room" placeholder="2 twin, 1 double"></div><div><label>Di chuyển</label><select id="trans"><option>Xe riêng</option><option>Tàu/Shinkansen</option><option>Kết hợp</option></select></div><div><label>Hướng dẫn viên</label><select id="guide"><option>Tiếng Việt</option><option>Tiếng Anh</option><option>Tiếng Nhật</option><option>Không cần</option></select></div></div>
+  <div class="row"><div><label>Bữa ăn</label><input id="meal" placeholder="Sáng KS, 2 bữa tối Nhật"></div><div><label>Yêu cầu đặc biệt</label><input id="spec" placeholder="Onsen, halal, xe lăn, không mua sắm..."></div></div>
+  <label>Nội dung gốc khách gửi (dán vào; XÓA số hộ chiếu/thẻ trước)</label><textarea id="raw"></textarea>
+  <button class="btn p" onclick="build()">Tạo phiếu + nháp trả lời</button><button class="btn" onclick="saveRec()">Lưu vào danh sách</button><button class="btn" onclick="exportCSV()">Xuất CSV</button>
+  <p class="hint">Giá do App báo giá Asahi tính. App này không bao giờ đưa giá vào thư.</p>
+</section>
+<section class="card">
+  <h2>2. Phiếu yêu cầu (dán vào App báo giá / Sheet)</h2><pre id="sheet">—</pre><button class="btn" onclick="cp('sheet')">Sao chép phiếu</button>
+  <h2 style="margin-top:16px">3. Nháp trả lời (không có giá)</h2><pre id="reply">—</pre><button class="btn" onclick="cp('reply')">Sao chép thư</button>
+</section>
+<section class="card full">
+  <h2>Danh sách yêu cầu đã lưu</h2><table id="list"></table>
+</section>
+</main>
+<script>
+const KEY='asahi-inquiry-v1';let DB=JSON.parse(localStorage.getItem(KEY)||'{"seq":0,"items":[]}');
+const g=id=>document.getElementById(id).value.trim();
+function missing(){const m=[];if(!g('d1')||!g('d2'))m.push('ngày đến/rời chính xác');if(!g('route'))m.push('các điểm muốn đi và thứ tự');if(!g('room'))m.push('loại phòng và số phòng');if(!g('ch'))m.push('tuổi trẻ em (nếu có)');if(!g('apt'))m.push('sân bay đến/đi và giờ bay');if(!g('bud'))m.push('ngân sách dự kiến');if(!g('meal'))m.push('bữa ăn mong muốn');return m.slice(0,5)}
+function nights(){if(!g('d1')||!g('d2'))return '';return Math.round((new Date(g('d2'))-new Date(g('d1')))/864e5)+' đêm'}
+function build(){if(!g('code'))document.getElementById('code').value='INQ-'+new Date().toISOString().slice(0,10).replace(/-/g,'')+'-'+String(++DB.seq).padStart(3,'0');
+ const m=missing();const sheet=[['Mã',g('code')],['Loại',g('type')],['Liên hệ',g('who')],['Ngày',`${g('d1')} → ${g('d2')} (${nights()})`],['Sân bay',g('apt')],['Khách',`${g('ad')} NL, trẻ em: ${g('ch')||'0'}`],['Lộ trình',g('route')],['Phòng',g('room')],['Di chuyển',g('trans')],['HDV',g('guide')],['Bữa ăn',g('meal')],['Đặc biệt',g('spec')],['Ngân sách',g('bud')],['Còn thiếu',m.join('; ')||'—'],['Nguồn',g('raw').slice(0,300)]].map(r=>r[0].padEnd(10)+': '+(r[1]||'')).join('\n');
+ document.getElementById('sheet').textContent=sheet;
+ const q=m;const L={
+ vi:`Kính gửi ${g('who')||'Quý đối tác'},\n\nCảm ơn Quý vị đã gửi yêu cầu cho Asahi VietLife. Chúng tôi đã nhận: ${g('ad')} người lớn${g('ch')?' + trẻ em '+g('ch'):''}, ${g('d1')||'…'} → ${g('d2')||'…'}, lộ trình ${g('route')||'…'}, ${g('trans').toLowerCase()}, HDV ${g('guide').toLowerCase()}.\n${q.length?'Để lên lịch trình chính xác, xin Quý vị cho biết thêm:\n'+q.map((x,i)=>`${i+1}. ${x}`).join('\n')+'\n':''}\nChúng tôi sẽ gửi lịch trình chi tiết và báo giá trong vòng 24–48 giờ sau khi nhận đủ thông tin.\n\nTrân trọng,\nAsahi VietLife LLC (合同会社朝日越南ライフ) – Japan local tour operator\n旅行サービス手配業 第20990号`,
+ en:`Dear ${g('who')||'Partner'},\n\nThank you for your enquiry to Asahi VietLife. We have noted: ${g('ad')} adults${g('ch')?' + children '+g('ch'):''}, ${g('d1')||'…'} to ${g('d2')||'…'}, route ${g('route')||'…'}, ${g('trans')}, guide: ${g('guide')}.\n${q.length?'To design the itinerary precisely, could you let us know:\n'+q.map((x,i)=>`${i+1}. ${x}`).join('\n')+'\n':''}\nWe will send a detailed itinerary and quotation within 24–48 hours of receiving the details.\n\nBest regards,\nAsahi VietLife LLC – Japan local tour operator (Tokyo)\nRegistered travel service arrangement business No. 20990`,
+ ja:`${g('who')||'ご担当者'} 様\n\nこのたびはお問い合わせありがとうございます。Asahi VietLife（合同会社朝日越南ライフ）です。\nご希望内容：大人${g('ad')}名${g('ch')?'・お子様 '+g('ch'):''}、${g('d1')||'…'}〜${g('d2')||'…'}、行程 ${g('route')||'…'}、${g('trans')}、ガイド：${g('guide')}。\n${q.length?'正確な行程作成のため、以下をお知らせください。\n'+q.map((x,i)=>`${i+1}. ${x}`).join('\n')+'\n':''}\n情報をいただいてから24〜48時間以内に、行程表とお見積りをお送りいたします。\n\nどうぞよろしくお願いいたします。\n合同会社朝日越南ライフ（旅行サービス手配業 第20990号）`};
+ document.getElementById('reply').textContent=L[g('lang')]}
+function saveRec(){if(!g('code'))build();DB.items.push({code:g('code'),date:new Date().toISOString().slice(0,10),who:g('who'),type:g('type'),d1:g('d1'),d2:g('d2'),pax:`${g('ad')}+${g('ch')||0}`,route:g('route'),status:'Mới'});localStorage.setItem(KEY,JSON.stringify(DB));renderList()}
+function renderList(){document.getElementById('list').innerHTML='<tr><th>Mã</th><th>Ngày nhận</th><th>Liên hệ</th><th>Loại</th><th>Đi</th><th>Về</th><th>Khách</th><th>Lộ trình</th><th>Trạng thái</th><th></th></tr>'+DB.items.map((x,i)=>`<tr><td>${x.code}</td><td>${x.date}</td><td>${x.who}</td><td>${x.type}</td><td>${x.d1}</td><td>${x.d2}</td><td>${x.pax}</td><td>${x.route}</td><td><select onchange="DB.items[${i}].status=this.value;localStorage.setItem(KEY,JSON.stringify(DB))">${['Mới','Chờ thông tin','Đã báo giá','Chốt','Hủy'].map(s=>`<option ${s===x.status?'selected':''}>${s}</option>`).join('')}</select></td><td><button class="btn" style="margin:0;padding:2px 8px" onclick="DB.items.splice(${i},1);localStorage.setItem(KEY,JSON.stringify(DB));renderList()">×</button></td></tr>`).join('')}
+function exportCSV(){const q=v=>'"'+String(v??'').replace(/"/g,'""')+'"';const rows=[['Mã','Ngày nhận','Liên hệ','Loại','Đi','Về','Khách','Lộ trình','Trạng thái'],...DB.items.map(x=>[x.code,x.date,x.who,x.type,x.d1,x.d2,x.pax,x.route,x.status])];const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['\ufeff'+rows.map(r=>r.map(q).join(',')).join('\r\n')],{type:'text/csv;charset=utf-8'}));a.download='asahi_inquiries.csv';a.click()}
+function cp(id){navigator.clipboard?.writeText(document.getElementById(id).textContent)}
+renderList();
+</script>
+</body>
+</html>

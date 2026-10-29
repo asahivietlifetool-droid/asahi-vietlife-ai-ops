@@ -1,0 +1,330 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Yume Ops Desk – quản lý quán (chạy offline)</title>
+<!--
+  YUME OPS DESK v1 — app một file, chạy offline trên máy: mở file này bằng Edge/Chrome là dùng được, không cài gì.
+  Dữ liệu lưu trong trình duyệt của máy này (localStorage). Nhớ "Sao lưu JSON" mỗi tuần.
+  Module: Hôm nay (brief tự động) · Lịch hẹn · Việc cần làm · Nội dung · Soát từ cấm · Trợ lý AI (prompt) · Cài đặt
+  Dữ liệu khách (tên, SĐT) KHÔNG rời khỏi máy; file CSV xuất cho Google Sheet chỉ có mã khách.
+-->
+<style>
+:root{--silk:#F8F4EC;--silk2:#EFE8DC;--night:#2B2434;--gold:#C8A04A;--gold2:#8A6620;--gold3:#E7D08A;--ink:#262129;--soft:#5E5664;--line:rgba(138,102,32,.28);--ok:#2E7D5B;--warn:#B8860B;--bad:#B5413A;--white:#fff}
+*{box-sizing:border-box}html,body{margin:0;height:100%}
+body{font-family:"Noto Sans","Noto Sans JP","Segoe UI","Hiragino Sans","Yu Gothic",system-ui,sans-serif;font-size:15px;line-height:1.55;color:var(--ink);background:var(--silk);display:grid;grid-template-columns:220px 1fr;min-height:100vh}
+aside{background:var(--night);color:#D9D0C3;padding:18px 14px;position:sticky;top:0;height:100vh;display:flex;flex-direction:column;gap:6px}
+aside .brand{font-family:"Cormorant Garamond","Shippori Mincho",Georgia,serif;font-size:22px;color:var(--gold3);margin:0 0 14px 6px}
+aside button{all:unset;cursor:pointer;padding:9px 12px;border-radius:8px;color:#D9D0C3;display:flex;justify-content:space-between;gap:8px}
+aside button:hover{background:rgba(255,255,255,.06)}aside button[aria-current="page"]{background:var(--gold);color:var(--night)}
+aside .sp{flex:1}aside small{color:#8f8697;font-size:12px;padding:0 6px}
+main{padding:22px 28px;max-width:1200px}
+h1{font-family:"Cormorant Garamond","Shippori Mincho",Georgia,serif;font-weight:500;font-size:28px;margin:0 0 4px}
+h2{font-size:17px;margin:22px 0 8px;font-weight:600}.sub{color:var(--soft);margin:0 0 16px}
+.card{background:var(--white);border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin-bottom:14px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:end}.row>*{flex:1 1 140px}.row .w2{flex:2 1 220px}.row .auto{flex:0 0 auto}
+label{display:block;font-size:12px;color:var(--soft);margin-bottom:3px}
+input,select,textarea{width:100%;font:inherit;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--ink)}
+textarea{min-height:110px;resize:vertical}
+.btn{font:inherit;padding:8px 14px;border-radius:999px;border:1px solid var(--line);background:#fff;color:var(--ink);cursor:pointer}
+.btn:hover{border-color:var(--gold2)}.btn.p{background:var(--gold);border-color:var(--gold);color:var(--night);font-weight:600}.btn.s{font-size:13px;padding:5px 10px}.btn.d{color:var(--bad)}
+table{width:100%;border-collapse:collapse;font-size:14px}th,td{text-align:left;padding:8px 6px;border-bottom:1px solid var(--line);vertical-align:top}th{font-size:12px;color:var(--soft);font-weight:600}
+.tag{display:inline-block;padding:2px 8px;border-radius:999px;font-size:12px;background:var(--silk2)}
+.tag.ok{background:#E3F2EA;color:var(--ok)}.tag.warn{background:#FBF1D6;color:var(--warn)}.tag.bad{background:#F8E1DF;color:var(--bad)}
+.tl{display:grid;grid-template-columns:70px 1fr;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#fff}
+.tl .h{padding:6px 8px;font-size:12px;color:var(--soft);border-bottom:1px dotted var(--line);min-height:44px}
+.tl .c{border-bottom:1px dotted var(--line);border-left:1px solid var(--line);padding:4px 8px;min-height:44px;display:flex;gap:6px;flex-wrap:wrap}
+.ap{background:var(--gold3);border-left:4px solid var(--gold2);border-radius:6px;padding:3px 8px;font-size:13px;cursor:pointer}
+.ap.nails{background:#F3DAD4;border-color:#C98A7D}.ap.head{background:#E7D08A;border-color:var(--gold2)}.ap.facial{background:#E0E6F0;border-color:#6F84A8}.ap.cancel{opacity:.45;text-decoration:line-through}
+.brief{white-space:pre-wrap;background:var(--night);color:#F5EFE3;padding:16px 18px;border-radius:12px;font-size:14px;line-height:1.7}
+.kpi{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:12px 0}.kpi div{background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px}.kpi b{display:block;font-size:26px;font-family:"Cormorant Garamond",Georgia,serif;color:var(--gold2)}.kpi span{font-size:12px;color:var(--soft)}
+mark{background:#F8E1DF;color:var(--bad);padding:0 2px;border-radius:3px}
+.ng{display:grid;grid-template-columns:1fr 1fr;gap:12px}.ng .out{background:#fff;border:1px solid var(--line);border-radius:8px;padding:10px;min-height:110px;white-space:pre-wrap}
+.hint{font-size:12px;color:var(--soft)}
+.toast{position:fixed;right:18px;bottom:18px;background:var(--night);color:#fff;padding:10px 14px;border-radius:10px;opacity:0;transition:opacity .25s;pointer-events:none}.toast.on{opacity:1}
+.hidden{display:none}
+@media (max-width:820px){body{grid-template-columns:1fr}aside{position:static;height:auto;flex-direction:row;flex-wrap:wrap}aside .sp,aside small{display:none}main{padding:14px}.kpi{grid-template-columns:1fr 1fr}.ng{grid-template-columns:1fr}}
+@media print{aside,.noprint{display:none!important}body{grid-template-columns:1fr;background:#fff}main{padding:0}}
+</style>
+</head>
+<body>
+<aside>
+  <p class="brand">Yume Ops Desk</p>
+  <button data-v="today" aria-current="page"><span>Hôm nay</span><span>今日</span></button>
+  <button data-v="book"><span>Lịch hẹn</span><span>予約</span></button>
+  <button data-v="tasks"><span>Việc cần làm</span><span>タスク</span></button>
+  <button data-v="content"><span>Nội dung</span><span>投稿</span></button>
+  <button data-v="ng"><span>Soát từ cấm</span><span>NG語</span></button>
+  <button data-v="ai"><span>Trợ lý AI</span><span>AI</span></button>
+  <button data-v="settings"><span>Cài đặt</span><span>設定</span></button>
+  <div class="sp"></div>
+  <small id="stamp"></small>
+</aside>
+<main>
+
+<!-- ============ HÔM NAY ============ -->
+<section id="v-today">
+  <h1>Hôm nay</h1><p class="sub" id="today-date"></p>
+  <div class="kpi"><div><b id="k1">0</b><span>lịch hẹn hôm nay</span></div><div><b id="k2">0</b><span>việc quá hạn</span></div><div><b id="k3">0</b><span>bài chờ duyệt</span></div><div><b id="k4">0</b><span>ngày đến khai trương</span></div></div>
+  <div class="row noprint" style="margin-bottom:10px"><button class="btn p auto" onclick="buildBrief()">Tạo brief sáng</button><button class="btn auto" onclick="copyText(document.getElementById('brief').textContent)">Sao chép</button><button class="btn auto" onclick="window.print()">In</button></div>
+  <div class="brief" id="brief">Bấm "Tạo brief sáng" – app tự đọc lịch hẹn, việc, nội dung trong máy và viết brief. Không cần AI, không tốn tiền.</div>
+</section>
+
+<!-- ============ LỊCH HẸN ============ -->
+<section id="v-book" class="hidden">
+  <h1>Lịch hẹn</h1><p class="sub">Tên và số điện thoại khách chỉ lưu trên máy này. File CSV cho Google Sheet chỉ có mã khách.</p>
+  <div class="card noprint">
+    <div class="row">
+      <div><label>Ngày</label><input type="date" id="b-date"></div>
+      <div><label>Giờ</label><input type="time" id="b-time" step="900" value="10:00"></div>
+      <div class="w2"><label>Dịch vụ</label><select id="b-svc"></select></div>
+      <div><label>Phút</label><input type="number" id="b-min" min="15" step="5"></div>
+      <div><label>Nhân viên</label><select id="b-staff"></select></div>
+    </div>
+    <div class="row">
+      <div><label>Mã khách (tự tạo nếu trống)</label><input id="b-code" placeholder="K0001"></div>
+      <div class="w2"><label>Tên khách (chỉ lưu trên máy)</label><input id="b-name"></div>
+      <div><label>SĐT / LINE (chỉ lưu trên máy)</label><input id="b-phone"></div>
+      <div><label>Kênh</label><select id="b-ch"><option>LINE</option><option>Điện thoại</option><option>Facebook</option><option>Walk-in</option></select></div>
+      <div class="w2"><label>Ghi chú (dị ứng, mùi tránh, yêu cầu)</label><input id="b-note"></div>
+      <div class="auto"><button class="btn p" onclick="addBooking()">Thêm lịch</button></div>
+    </div>
+    <p class="hint" id="b-warn"></p>
+  </div>
+  <div class="row noprint" style="margin-bottom:8px"><div class="auto"><button class="btn s" onclick="shiftDay(-1)">◀</button> <input type="date" id="b-view" style="width:160px;display:inline-block"> <button class="btn s" onclick="shiftDay(1)">▶</button> <button class="btn s" onclick="setToday()">Hôm nay</button></div><div class="auto"><button class="btn s" onclick="exportBookingsCSV()">Xuất CSV cho Sheet (BOOKINGS)</button> <button class="btn s" onclick="window.print()">In lịch ngày</button></div></div>
+  <div class="tl" id="timeline"></div>
+  <h2>Tuần này</h2>
+  <table id="week"></table>
+</section>
+
+<!-- ============ VIỆC ============ -->
+<section id="v-tasks" class="hidden">
+  <h1>Việc cần làm</h1><p class="sub">Cùng cấu trúc tab TASKS trên Google Sheet. Việc quá hạn tự lên brief sáng.</p>
+  <div class="card noprint"><div class="row">
+    <div class="w2"><label>Việc</label><input id="t-name"></div>
+    <div><label>Doanh nghiệp</label><select id="t-biz"><option>Yume</option><option>Asahi</option><option>Chung</option></select></div>
+    <div><label>Người</label><input id="t-who" placeholder="Chủ / Nhân viên A"></div>
+    <div><label>Hạn</label><input type="date" id="t-due"></div>
+    <div class="auto"><button class="btn p" onclick="addTask()">Thêm</button></div>
+  </div></div>
+  <div class="row noprint" style="margin-bottom:8px"><div class="auto"><button class="btn s" onclick="loadStarterTasks()">Nạp 12 việc khai trương mẫu</button> <button class="btn s" onclick="exportCSV('TASKS',['ID','Việc','Doanh nghiệp','Người phụ trách','Hạn','Trạng thái','Ghi chú'],DB.tasks.map(t=>[t.id,t.name,t.biz,t.who,t.due,t.status,t.note||'']))">Xuất CSV (TASKS)</button></div></div>
+  <table id="tasks"></table>
+</section>
+
+<!-- ============ NỘI DUNG ============ -->
+<section id="v-content" class="hidden">
+  <h1>Nội dung</h1><p class="sub">Lịch đăng Instagram / Facebook / TikTok / LINE. Trước khi chuyển "Đã duyệt", chạy Soát từ cấm.</p>
+  <div class="card noprint"><div class="row">
+    <div><label>Ngày đăng</label><input type="date" id="c-date"></div>
+    <div><label>Doanh nghiệp</label><select id="c-biz"><option>Yume</option><option>Asahi</option></select></div>
+    <div><label>Nền tảng</label><select id="c-pf"><option>IG+FB</option><option>TikTok</option><option>LINE</option><option>Web</option></select></div>
+    <div class="w2"><label>Chủ đề / caption ngắn</label><input id="c-topic"></div>
+    <div><label>Link file</label><input id="c-link" placeholder="Drive/Canva"></div>
+    <div class="auto"><button class="btn p" onclick="addContent()">Thêm</button></div>
+  </div></div>
+  <div class="row noprint" style="margin-bottom:8px"><div class="auto"><button class="btn s" onclick="exportCSV('CONTENT',['ID','Ngày đăng dự kiến','Doanh nghiệp','Nền tảng','Chủ đề','Ngôn ngữ','Link file','Trạng thái','Kết quả'],DB.content.map(c=>[c.id,c.date,c.biz,c.pf,c.topic,'JA/VI/EN',c.link||'',c.status,c.result||'']))">Xuất CSV (CONTENT)</button></div></div>
+  <table id="content"></table>
+</section>
+
+<!-- ============ SOÁT TỪ CẤM ============ -->
+<section id="v-ng" class="hidden">
+  <h1>Soát từ cấm</h1><p class="sub">薬機法・景品表示法・あん摩マッサージ指圧師法. Dán caption/menu/tin nhắn (JA, VI, EN) rồi bấm Soát. Danh sách từ ở Cài đặt.</p>
+  <div class="ng">
+    <div><label>Văn bản cần soát</label><textarea id="ng-in" placeholder="例：頭皮マッサージで肩こり解消、美白効果…"></textarea><div class="row" style="margin-top:8px"><button class="btn p auto" onclick="checkNG()">Soát</button><button class="btn auto" onclick="document.getElementById('ng-in').value='';checkNG()">Xóa</button></div></div>
+    <div><label>Kết quả</label><div class="out" id="ng-out">—</div><div id="ng-list" style="margin-top:8px"></div></div>
+  </div>
+</section>
+
+<!-- ============ TRỢ LÝ AI ============ -->
+<section id="v-ai" class="hidden">
+  <h1>Trợ lý AI</h1><p class="sub">Chọn vai trò → điền ô → "Sao chép prompt" → dán vào Claude hoặc ChatGPT (gói đã trả, 0 đồng thêm). Prompt lấy từ repo asahi-vietlife-ai-ops/agents.</p>
+  <div class="card">
+    <div class="row">
+      <div class="w2"><label>Vai trò</label><select id="ai-role"></select></div>
+      <div class="w2"><label>Chủ đề / dữ liệu tuần này</label><input id="ai-topic" placeholder="VD: ưu đãi khai trương gel 1 màu"></div>
+      <div class="auto"><button class="btn p" onclick="buildPrompt()">Tạo prompt</button></div>
+    </div>
+    <label style="margin-top:10px">Prompt</label><textarea id="ai-out" style="min-height:220px"></textarea>
+    <div class="row" style="margin-top:8px"><button class="btn auto" onclick="copyText(document.getElementById('ai-out').value)">Sao chép prompt</button><a class="btn auto" href="https://claude.ai/new" target="_blank" rel="noopener">Mở Claude</a><a class="btn auto" href="https://chatgpt.com/" target="_blank" rel="noopener">Mở ChatGPT</a></div>
+    <p class="hint">Kết quả AI trả về: dán vào "Nội dung" (bài) hoặc "Việc cần làm" (việc). Luôn chạy Soát từ cấm trước khi đăng.</p>
+  </div>
+</section>
+
+<!-- ============ CÀI ĐẶT ============ -->
+<section id="v-settings" class="hidden">
+  <h1>Cài đặt</h1>
+  <div class="card"><h2 style="margin-top:0">Dịch vụ & giá (dùng cho lịch hẹn)</h2><textarea id="s-svc"></textarea><p class="hint">Mỗi dòng: nhóm|tên|phút|giá. Nhóm: nails / head / facial.</p></div>
+  <div class="card"><h2 style="margin-top:0">Nhân viên</h2><input id="s-staff" placeholder="Chủ, Nhân viên A, Nhân viên B"></div>
+  <div class="card"><h2 style="margin-top:0">Giờ mở cửa & khai trương</h2><div class="row"><div><label>Mở</label><input type="time" id="s-open" value="10:00"></div><div><label>Đóng</label><input type="time" id="s-close" value="20:00"></div><div><label>Ngày khai trương</label><input type="date" id="s-opening" value="2026-12-10"></div></div></div>
+  <div class="card"><h2 style="margin-top:0">Từ cấm (mỗi dòng: từ => gợi ý thay)</h2><textarea id="s-ng" style="min-height:200px"></textarea></div>
+  <div class="row"><button class="btn p auto" onclick="saveSettings()">Lưu cài đặt</button><button class="btn auto" onclick="backup()">Sao lưu JSON</button><label class="btn auto" style="display:inline-block">Khôi phục JSON <input type="file" accept=".json" style="display:none" onchange="restore(this)"></label><button class="btn d auto" onclick="if(confirm('Xóa toàn bộ dữ liệu trên máy này?')){localStorage.removeItem(KEY);location.reload()}">Xóa dữ liệu</button></div>
+</section>
+</main>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ---------------- dữ liệu ---------------- */
+const KEY='yume-ops-v1';
+const DEFAULT_SERVICES=`nails|ジェル ワンカラー / Gel 1 màu|60|5500
+nails|ジェル デザイン / Gel thiết kế|90|7000
+nails|フットジェル / Gel chân|75|8800
+nails|ハンドケア / Chăm sóc tay|30|3300
+nails|ジェルオフ / Tháo gel|20|1100
+head|ヘッドスパ ショート / Head spa 30'|30|3300
+head|ヘッドスパ ロング / Head spa 50'|50|5500
+head|ヘッドスパ 追加 / Thêm head spa|20|2200
+facial|フェイシャル ベーシック / Facial cơ bản|40|6600
+facial|フェイシャル うるおいマスク / Facial mặt nạ|60|8800
+facial|フェイシャル＋ヘッドスパ / Facial + head spa|80|11000`;
+const DEFAULT_NG=`治療 => ケア
+治す => 整える
+治る => すこやかに
+改善 => サポート
+医療 => （削除）
+マッサージ => ほぐし／リラクゼーション
+指圧 => （削除）
+整体 => （削除）
+矯正 => （削除）
+美白 => 透明感のある印象へ
+シミが消える => （削除）
+しわが消える => （削除）
+小顔 => すっきりした印象
+たるみ => （削除）
+アンチエイジング => （削除）
+若返り => （削除）
+再生 => （削除）
+肩こり => 首や肩まわりをゆったり
+疲労回復 => リフレッシュ
+血行促進 => （削除）
+自律神経 => （削除）
+デトックス => （削除）
+痩身 => （削除）
+発毛 => （削除）
+育毛 => 頭皮をすこやかに保つ
+薄毛 => （削除）
+必ず => （削除）
+100% => （削除）
+永久 => （削除）
+即効 => （削除）
+日本一 => （削除）
+trị liệu => chăm sóc
+điều trị => chăm sóc
+chữa trị => chăm sóc
+chữa => chăm sóc
+massage => thư giãn (bản tiếng Nhật không dùng)
+bấm huyệt => (bỏ)
+làm trắng da => sáng mịn hơn
+hết nám => (bỏ)
+xóa nhăn => (bỏ)
+thon mặt => (bỏ)
+trẻ hóa => (bỏ)
+tái tạo => (bỏ)
+thải độc => (bỏ)
+giảm béo => (bỏ)
+mọc tóc => (bỏ)
+cam kết 100% => (bỏ)
+vĩnh viễn => (bỏ)
+treatment => care
+cure => (remove)
+heal => (remove)
+therapy => relaxation
+whitening => brighter-looking
+anti-aging => (remove)
+removes wrinkles => (remove)
+detox => (remove)
+slimming => (remove)
+guaranteed => (remove)`;
+const ROLES={
+ brief:['01 Trợ lý điều hành – brief sáng (dán dữ liệu từ app)',`Bạn là trợ lý điều hành của anh Giang (Asahi VietLife LLC – du lịch; Yume Spa – khai trương 12/2026, Takenotsuka). Dưới đây là dữ liệu hôm nay do app Yume Ops Desk xuất. Viết brief tiếng Việt ≤ 12 dòng: lịch hôm nay, việc quá hạn, việc 3 ngày tới, nội dung chờ duyệt, và BA QUYẾT ĐỊNH cần chủ. Không bịa dữ liệu.\n\nDỮ LIỆU:\n{{DATA}}`],
+ legal:['02 Pháp lý & khai trương spa',`Bạn là trợ lý hành chính cho Yume Spa (nail, head spa nhẹ, chăm sóc da mặt; Takenotsuka, Adachi-ku; khai trương 12/2026; vận hành bởi 合同会社朝日越南ライフ). Soạn: (1) nội dung tiếng Nhật ngắn, lịch sự để gọi 足立保健所 生活衛生課 hỏi: gội đầu có nước có cần 美容所 với mặt bằng hiện tại; facial dùng máy có thuộc 美容所; hồ sơ 開設届 cần gì, phí, thời gian kiểm tra. (2) 施術内容説明 từng dịch vụ bằng tiếng Nhật, KHÔNG dùng 治療/治す/改善/マッサージ/美白/小顔. (3) Lịch nộp hồ sơ để kịp khai trương (開設届 trước ngày mở ≥ 15 ngày). Luôn ghi "cần 保健所 xác nhận". Chủ đề thêm: {{TOPIC}}`],
+ content:['03 Nội dung spa tuần (3 reel + 2 bài)',`Bạn viết nội dung cho Yume Spa – studio nhỏ ở Takenotsuka (Adachi, Tokyo): nail, head spa nhẹ, chăm sóc da mặt. Khách: phụ nữ Nhật 30–50 tuổi quanh ga Takenotsuka và cộng đồng người Việt ở Adachi. Giọng: "Tinh tế trong từng chi tiết – đẹp tự nhiên, không phô." Ngắn, ấm, ≤ 2 emoji. Chủ đề tuần này: {{TOPIC}}.\nTạo: A. 3 kịch bản reel 20–30 giây (cảnh 1-2-3, chữ trên màn hình JA ≤ 8 chữ/cảnh, hook 1 giây đầu, kết "LINEで予約"). B. 2 bài ảnh: caption JA ≤ 120 chữ + VI + EN, 8 hashtag (#竹ノ塚ネイル #足立区ネイル #ヘッドスパ #竹ノ塚 #nailtokyo #ネイルサロン #フェイシャル). C. Tự soát và liệt kê từ vi phạm 薬機法/景表法/あん摩法 (治療・改善・マッサージ・美白・小顔・肩こり解消…) rồi sửa; ghi "Đã soát". D. Lịch đăng (12:00 hoặc 20:00 JST). Không hứa hiệu quả, không ảnh khách chưa đồng ý.`],
+ b2b:['05 Đối tác du lịch – 5 hồ sơ/tuần',`Bạn là trợ lý phát triển đối tác cho Asahi VietLife LLC – 旅行サービス手配業 第20990号, Tokyo; dịch vụ: thiết kế hành trình, xe riêng, hướng dẫn viên đa ngôn ngữ, đặt vé trải nghiệm, No mandatory shopping stops; khách mục tiêu: công ty du lịch outbound bán tour Nhật. Thị trường tuần này: {{TOPIC}}. Tìm 5 công ty: chỉ dùng website chính thức, hiệp hội, hội chợ (VITM, MATTA, NATAS). Mỗi công ty: tên, website, thị trường, có bán tour Nhật (link bằng chứng), quy mô ước lượng, kênh liên hệ công khai (form/email chung – không email cá nhân), điểm 0–100 + lý do 1 dòng, ngày tra cứu. Trả về dạng bảng CSV để dán vào Sheet ASAHI_B2B. KHÔNG soạn email gửi đi.`],
+ inquiry:['06 Điều phối yêu cầu tour (dán email khách)',`Bạn là điều phối viên yêu cầu tour của Asahi VietLife. Từ nội dung sau (đã xóa dữ liệu nhạy cảm), lập PHIẾU YÊU CẦU dạng bảng: ngày đến/đi, số khách (người lớn/trẻ em + tuổi), thành phố/điểm theo thứ tự, loại phòng (twin/double/single, số phòng), xe riêng hay tàu, hướng dẫn viên (ngôn ngữ), bữa ăn, ngân sách nếu có, yêu cầu đặc biệt, câu hỏi còn thiếu (≤ 5). Sau đó soạn nháp trả lời bằng ngôn ngữ của khách: cảm ơn, xác nhận đã hiểu, hỏi 5 câu còn thiếu, hẹn gửi báo giá trong 24–48h. TUYỆT ĐỐI không nêu giá, không ước lượng giá, không cam kết còn phòng/vé.\n\nNỘI DUNG KHÁCH GỬI:\n{{TOPIC}}`],
+ media:['08 Kịch bản & caption media (shot list)',`Tuần này đẩy: {{TOPIC}}. Nền tảng: Instagram Reels + Facebook + TikTok (video dọc 9:16). Tạo SHOT LIST 10 cảnh cho nhân viên quay bằng điện thoại (góc máy, hành động, 3–5 giây, ánh sáng), 1 kịch bản 30 giây (hook 1 giây, 3 ý, kết "LINEで予約"/"Nhắn LINE"), chữ trên màn hình JA ≤ 8 chữ/cảnh, nhạc gợi ý từ thư viện CapCut, caption JA/VI/EN ≤ 100 chữ + 8 hashtag. Không dùng 治療/改善/マッサージ/美白/小顔; ghi "Đã soát". Không quay mặt khách.`],
+ reply:['Trả lời tin nhắn khách spa (JA/VI/EN)',`Bạn là lễ tân Yume Spa (Takenotsuka). Viết câu trả lời LINE ngắn, lịch sự, bằng ngôn ngữ khách dùng, cho tình huống: {{TOPIC}}. Nếu khách hỏi hiệu quả, chỉ nói về trải nghiệm (thư giãn, sạch, mềm), không hứa hiệu quả y tế; nếu khách mang thai/bệnh nền, mời hỏi bác sĩ và báo trước khi đặt. Kèm bản JA + VI.`]
+};
+let DB=load();
+function load(){try{const d=JSON.parse(localStorage.getItem(KEY)||'{}');return Object.assign({bookings:[],tasks:[],content:[],seq:{K:0,T:0,C:0},settings:{services:DEFAULT_SERVICES,staff:'Chủ, Nhân viên A',open:'10:00',close:'20:00',opening:'2026-12-10',ng:DEFAULT_NG}},d)}catch(e){return {bookings:[],tasks:[],content:[],seq:{K:0,T:0,C:0},settings:{services:DEFAULT_SERVICES,staff:'Chủ, Nhân viên A',open:'10:00',close:'20:00',opening:'2026-12-10',ng:DEFAULT_NG}}}}
+function save(){localStorage.setItem(KEY,JSON.stringify(DB));document.getElementById('stamp').textContent='Đã lưu '+new Date().toLocaleTimeString('vi-VN')}
+function nextId(p){DB.seq[p]=(DB.seq[p]||0)+1;return p+String(DB.seq[p]).padStart(4,'0')}
+const today=()=>new Date().toISOString().slice(0,10);
+const fmtD=d=>{const x=new Date(d+'T00:00:00');return x.toLocaleDateString('vi-VN',{weekday:'short',day:'2-digit',month:'2-digit'})};
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('on');setTimeout(()=>t.classList.remove('on'),1800)}
+function copyText(s){navigator.clipboard?.writeText(s).then(()=>toast('Đã sao chép'),()=>toast('Không sao chép được'))}
+function services(){return DB.settings.services.split('\n').map(l=>l.split('|')).filter(a=>a.length>=4).map(a=>({g:a[0].trim(),n:a[1].trim(),m:+a[2],p:+a[3]}))}
+function staff(){return DB.settings.staff.split(',').map(s=>s.trim()).filter(Boolean)}
+
+/* ---------------- điều hướng ---------------- */
+document.querySelectorAll('aside button').forEach(b=>b.onclick=()=>show(b.dataset.v));
+function show(v){document.querySelectorAll('main section').forEach(s=>s.classList.toggle('hidden',s.id!=='v-'+v));document.querySelectorAll('aside button').forEach(b=>b.toggleAttribute('aria-current',b.dataset.v===v)&&b.setAttribute('aria-current','page'));document.querySelectorAll('aside button').forEach(b=>{if(b.dataset.v===v)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current')});({today:renderToday,book:renderBook,tasks:renderTasks,content:renderContent,ai:renderAI,settings:renderSettings,ng:checkNG})[v]()}
+
+/* ---------------- hôm nay ---------------- */
+function stats(){const t=today();const bk=DB.bookings.filter(b=>b.date===t&&b.status!=='Hủy');const od=DB.tasks.filter(x=>x.status!=='Done'&&x.due&&x.due<t);const pend=DB.content.filter(c=>c.status==='Chờ duyệt');const days=Math.ceil((new Date(DB.settings.opening)-new Date(t))/864e5);return {bk,od,pend,days}}
+function renderToday(){const s=stats();document.getElementById('today-date').textContent=new Date().toLocaleDateString('vi-VN',{weekday:'long',day:'numeric',month:'long',year:'numeric'});k1.textContent=s.bk.length;k2.textContent=s.od.length;k3.textContent=s.pend.length;k4.textContent=s.days}
+function buildBrief(){const t=today();const s=stats();const soon=DB.tasks.filter(x=>x.status!=='Done'&&x.due&&x.due>=t&&x.due<=addDays(t,3));const L=[];
+ L.push(`BRIEF SÁNG – ${fmtD(t)} (còn ${s.days} ngày đến khai trương Yume Spa)`);
+ L.push(`1. Lịch hẹn hôm nay: ${s.bk.length} khách`+(s.bk.length?' – '+s.bk.sort((a,b)=>a.time.localeCompare(b.time)).map(b=>`${b.time} ${b.svc.split(' / ')[0]} (${b.staff})`).join('; '):''));
+ L.push(`2. Quá hạn: ${s.od.length}`+(s.od.length?'\n'+s.od.map(x=>`   • ${x.name} – ${x.who} – trễ ${Math.round((new Date(t)-new Date(x.due))/864e5)} ngày`).join('\n'):''));
+ L.push(`3. Đến hạn trong 3 ngày: ${soon.length}`+(soon.length?'\n'+soon.slice(0,5).map(x=>`   • ${x.due} ${x.name} – ${x.who}`).join('\n'):''));
+ L.push(`4. Nội dung chờ duyệt: ${s.pend.length}`+(s.pend.length?'\n'+s.pend.map(c=>`   • ${c.date} ${c.pf} – ${c.topic}`).join('\n'):''));
+ const dec=[];if(s.od.length)dec.push('Việc quá hạn: dời hạn hay giao người khác?');if(s.pend.length)dec.push('Duyệt/ sửa nội dung chờ duyệt.');if(s.days<=20&&!DB.tasks.some(x=>/保健所|開設届/.test(x.name)&&x.status==='Done'))dec.push('Xác nhận 保健所 đã tư vấn/nộp 開設届 chưa.');if(!dec.length)dec.push('Không có quyết định gấp – chúc ngày tốt lành.');
+ L.push(`5. Quyết định cần anh hôm nay:\n`+dec.map((d,i)=>`   ${i+1}) ${d}`).join('\n'));
+ L.push(`\n(Tạo bởi Yume Ops Desk, dữ liệu trên máy, không dùng AI. Muốn AI viết lại: Trợ lý AI → vai trò 01.)`);
+ document.getElementById('brief').textContent=L.join('\n');DB._lastBrief=L.join('\n');save()}
+function addDays(d,n){const x=new Date(d+'T00:00:00');x.setDate(x.getDate()+n);return x.toISOString().slice(0,10)}
+
+/* ---------------- lịch hẹn ---------------- */
+function fillSvc(){const sel=document.getElementById('b-svc');sel.innerHTML=services().map(s=>`<option value="${s.n}" data-m="${s.m}" data-g="${s.g}">${s.n} – ${s.m}′ – ¥${s.p.toLocaleString()}</option>`).join('');sel.onchange=()=>document.getElementById('b-min').value=sel.selectedOptions[0].dataset.m;sel.onchange();document.getElementById('b-staff').innerHTML=staff().map(s=>`<option>${s}</option>`).join('')}
+function renderBook(){fillSvc();if(!document.getElementById('b-date').value)document.getElementById('b-date').value=today();if(!document.getElementById('b-view').value)document.getElementById('b-view').value=today();document.getElementById('b-view').onchange=renderTimeline;renderTimeline()}
+function setToday(){document.getElementById('b-view').value=today();renderTimeline()}
+function shiftDay(n){const v=document.getElementById('b-view');v.value=addDays(v.value||today(),n);renderTimeline()}
+function toMin(t){const [h,m]=t.split(':').map(Number);return h*60+m}
+function addBooking(){const g=id=>document.getElementById(id).value.trim();const date=g('b-date'),time=g('b-time'),svc=g('b-svc'),min=+g('b-min')||60,st=g('b-staff');if(!date||!time||!svc)return toast('Thiếu ngày/giờ/dịch vụ');
+ const s=toMin(time),e=s+min;const clash=DB.bookings.find(b=>b.date===date&&b.staff===st&&b.status!=='Hủy'&&toMin(b.time)<e&&toMin(b.time)+b.min>s);
+ if(clash&&!confirm(`${st} đã có lịch ${clash.time} (${clash.svc}). Vẫn thêm?`))return;
+ const code=g('b-code')||nextId('K');const sel=document.getElementById('b-svc').selectedOptions[0];
+ DB.bookings.push({id:nextId('B'),date,time,svc,g:sel.dataset.g,min,staff:st,code,name:g('b-name'),phone:g('b-phone'),ch:g('b-ch'),note:g('b-note'),status:'Đặt',ret:''});save();['b-code','b-name','b-phone','b-note'].forEach(i=>document.getElementById(i).value='');document.getElementById('b-view').value=date;renderTimeline();toast('Đã thêm lịch')}
+function renderTimeline(){const d=document.getElementById('b-view').value;const o=toMin(DB.settings.open),c=toMin(DB.settings.close);const tl=document.getElementById('timeline');let h='';
+ for(let m=o;m<c;m+=30){const items=DB.bookings.filter(b=>b.date===d&&toMin(b.time)>=m&&toMin(b.time)<m+30).sort((a,b)=>a.time.localeCompare(b.time));h+=`<div class="h">${String(Math.floor(m/60)).padStart(2,'0')}:${m%60?'30':'00'}</div><div class="c">${items.map(b=>`<span class="ap ${b.g} ${b.status==='Hủy'?'cancel':''}" onclick="editBooking('${b.id}')" title="${b.note||''}">${b.time} ${b.svc.split(' / ')[0]} · ${b.name||b.code} · ${b.staff} · ${b.min}′ ${b.status!=='Đặt'?'['+b.status+']':''}</span>`).join('')}</div>`}
+ tl.innerHTML=h;
+ const t=today();const wk=[...Array(7)].map((_,i)=>addDays(t,i));document.getElementById('week').innerHTML='<tr><th>Ngày</th><th>Số khách</th><th>Nail</th><th>Head spa</th><th>Facial</th><th>Doanh thu dự kiến</th></tr>'+wk.map(x=>{const bs=DB.bookings.filter(b=>b.date===x&&b.status!=='Hủy');const rev=bs.reduce((a,b)=>{const s=services().find(s=>s.n===b.svc);return a+(s?s.p:0)},0);return `<tr><td>${fmtD(x)}</td><td>${bs.length}</td><td>${bs.filter(b=>b.g==='nails').length}</td><td>${bs.filter(b=>b.g==='head').length}</td><td>${bs.filter(b=>b.g==='facial').length}</td><td>¥${rev.toLocaleString()}</td></tr>`}).join('')}
+function editBooking(id){const b=DB.bookings.find(x=>x.id===id);if(!b)return;const st=prompt(`${b.date} ${b.time} ${b.svc}\nKhách: ${b.name||''} ${b.phone||''} (${b.code})\nGhi chú: ${b.note||''}\n\nNhập trạng thái: Đặt / Đến / Hủy / No-show  (hoặc "xoa" để xóa)`,b.status);if(st===null)return;if(st.toLowerCase()==='xoa'){DB.bookings=DB.bookings.filter(x=>x.id!==id)}else if(['Đặt','Đến','Hủy','No-show'].includes(st)){b.status=st;if(st==='Đến'){b.ret=DB.bookings.some(x=>x.code===b.code&&x.id!==b.id&&x.status==='Đến')?'Y':'N'}}save();renderTimeline()}
+function exportBookingsCSV(){exportCSV('BOOKINGS',['Mã','Ngày','Giờ','Dịch vụ','Thời lượng','Nhân viên','Kênh','Trạng thái','Khách quay lại'],DB.bookings.map(b=>[b.code,b.date,b.time,b.svc,b.min,b.staff,b.ch,b.status,b.ret||'']))}
+
+/* ---------------- việc ---------------- */
+function addTask(){const n=document.getElementById('t-name').value.trim();if(!n)return;DB.tasks.push({id:nextId('T'),name:n,biz:document.getElementById('t-biz').value,who:document.getElementById('t-who').value.trim()||'Chủ',due:document.getElementById('t-due').value,status:'Chưa',note:''});save();document.getElementById('t-name').value='';renderTasks()}
+function loadStarterTasks(){const base=[['Gọi/đến 足立保健所 tư vấn 美容所 (mang mặt bằng + thiết bị + mô tả dịch vụ)','Yume','Nhân viên A',5],['Tạo LINE公式 Yume Spa (gói miễn phí) và dán link vào web','Yume','Chủ',5],['Gỡ "Lashes" khỏi fanpage nếu chưa có 美容師','Yume','Chủ',3],['Chốt giá menu khai trương (facial 40′ 6.600 hay 5.500)','Yume','Chủ',9],['Tạo Google Sheet từ asahi-ai-ops-sheet.xlsx, chia sẻ Claude','Chung','Chủ',2],['Kiểm tra hợp đồng thuê cho phép salon','Yume','Chủ',4],['Mua bảo hiểm 施設賠償責任','Yume','Chủ',30],['Buổi quay đầu tiên theo shot list','Yume','Nhân viên A',12],['Tạo Google Business Profile khi có địa chỉ','Yume','Chủ',16],['Nộp 開設届 (nếu thuộc 美容所) – trước khai trương ≥ 15 ngày','Yume','Nhân viên A',27],['Chụp ảnh quán sau thi công, thay ảnh web (gallery.js)','Yume','Nhân viên A',27],['Chạy thử quy trình đặt lịch với 5 khách quen','Yume','Nhân viên A',24]];base.forEach(([n,b,w,d])=>{if(!DB.tasks.some(t=>t.name===n))DB.tasks.push({id:nextId('T'),name:n,biz:b,who:w,due:addDays(today(),d),status:'Chưa',note:''})});save();renderTasks();toast('Đã nạp việc mẫu')}
+function renderTasks(){const t=today();document.getElementById('tasks').innerHTML='<tr><th>ID</th><th>Việc</th><th>DN</th><th>Người</th><th>Hạn</th><th>Trạng thái</th><th class="noprint"></th></tr>'+DB.tasks.slice().sort((a,b)=>(a.status==='Done')-(b.status==='Done')||(a.due||'9').localeCompare(b.due||'9')).map(x=>`<tr><td>${x.id}</td><td>${x.name}</td><td>${x.biz}</td><td>${x.who}</td><td>${x.due||''}</td><td><span class="tag ${x.status==='Done'?'ok':(x.due&&x.due<t?'bad':(x.status==='Đang'?'warn':''))}">${x.status}${x.due&&x.due<t&&x.status!=='Done'?' · quá hạn':''}</span></td><td class="noprint"><button class="btn s" onclick="cycleTask('${x.id}')">▸</button> <button class="btn s d" onclick="DB.tasks=DB.tasks.filter(y=>y.id!=='${x.id}');save();renderTasks()">×</button></td></tr>`).join('')}
+function cycleTask(id){const o=['Chưa','Đang','Chờ duyệt','Done'];const x=DB.tasks.find(t=>t.id===id);x.status=o[(o.indexOf(x.status)+1)%o.length];save();renderTasks()}
+
+/* ---------------- nội dung ---------------- */
+function addContent(){const topic=document.getElementById('c-topic').value.trim();if(!topic)return;DB.content.push({id:nextId('C'),date:document.getElementById('c-date').value,biz:document.getElementById('c-biz').value,pf:document.getElementById('c-pf').value,topic,link:document.getElementById('c-link').value.trim(),status:'Nháp',result:''});save();document.getElementById('c-topic').value='';renderContent()}
+function renderContent(){document.getElementById('content').innerHTML='<tr><th>ID</th><th>Ngày</th><th>DN</th><th>Nền tảng</th><th>Chủ đề</th><th>Link</th><th>Trạng thái</th><th class="noprint"></th></tr>'+DB.content.slice().sort((a,b)=>(a.date||'').localeCompare(b.date||'')).map(c=>`<tr><td>${c.id}</td><td>${c.date||''}</td><td>${c.biz}</td><td>${c.pf}</td><td>${c.topic}</td><td>${c.link?`<a href="${c.link}" target="_blank" rel="noopener">mở</a>`:''}</td><td><span class="tag ${c.status==='Đã đăng'?'ok':(c.status==='Chờ duyệt'?'warn':'')}">${c.status}</span></td><td class="noprint"><button class="btn s" onclick="cycleContent('${c.id}')">▸</button> <button class="btn s" onclick="document.getElementById('ng-in').value='${c.topic.replace(/'/g,'’')}';show('ng')">Soát</button> <button class="btn s d" onclick="DB.content=DB.content.filter(y=>y.id!=='${c.id}');save();renderContent()">×</button></td></tr>`).join('')}
+function cycleContent(id){const o=['Nháp','Chờ duyệt','Đã duyệt','Đã đăng'];const c=DB.content.find(x=>x.id===id);c.status=o[(o.indexOf(c.status)+1)%o.length];save();renderContent()}
+
+/* ---------------- soát từ cấm ---------------- */
+function ngList(){return DB.settings.ng.split('\n').map(l=>l.split('=>')).filter(a=>a[0]&&a[0].trim()).map(a=>({w:a[0].trim(),s:(a[1]||'').trim()}))}
+function esc(s){return s.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]))}
+function checkNG(){const txt=document.getElementById('ng-in').value;const out=document.getElementById('ng-out'),list=document.getElementById('ng-list');if(!txt.trim()){out.textContent='—';list.innerHTML='';return}
+ const hits=[];let html=esc(txt);ngList().forEach(({w,s})=>{const re=new RegExp(w.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'gi');if(re.test(txt)){hits.push({w,s,n:(txt.match(re)||[]).length});html=html.replace(re,m=>`<mark>${m}</mark>`)}});
+ out.innerHTML=html.replace(/\n/g,'<br>');list.innerHTML=hits.length?`<p><span class="tag bad">${hits.length} từ cần sửa</span></p><table><tr><th>Từ</th><th>Số lần</th><th>Gợi ý thay</th></tr>${hits.map(h=>`<tr><td><mark>${esc(h.w)}</mark></td><td>${h.n}</td><td>${esc(h.s)}</td></tr>`).join('')}</table>`:'<p><span class="tag ok">Đã soát – 0 từ cấm</span> <span class="hint">Vẫn cần người đọc lại ý nghĩa tổng thể (ví dụ "hiệu quả ngay" vẫn là hứa hẹn).</span></p>'}
+
+/* ---------------- trợ lý AI ---------------- */
+function renderAI(){const s=document.getElementById('ai-role');if(!s.options.length)s.innerHTML=Object.entries(ROLES).map(([k,v])=>`<option value="${k}">${v[0]}</option>`).join('')}
+function buildPrompt(){const k=document.getElementById('ai-role').value;const topic=document.getElementById('ai-topic').value.trim()||'(chưa nhập)';let p=ROLES[k][1].replace(/\{\{TOPIC\}\}/g,topic);if(k==='brief'){if(!DB._lastBrief)buildBrief();p=p.replace('{{DATA}}',DB._lastBrief||'')}document.getElementById('ai-out').value=p}
+
+/* ---------------- cài đặt / xuất ---------------- */
+function renderSettings(){const s=DB.settings;document.getElementById('s-svc').value=s.services;document.getElementById('s-staff').value=s.staff;document.getElementById('s-open').value=s.open;document.getElementById('s-close').value=s.close;document.getElementById('s-opening').value=s.opening;document.getElementById('s-ng').value=s.ng}
+function saveSettings(){const g=id=>document.getElementById(id).value;DB.settings={services:g('s-svc'),staff:g('s-staff'),open:g('s-open'),close:g('s-close'),opening:g('s-opening'),ng:g('s-ng')};save();toast('Đã lưu cài đặt')}
+function exportCSV(name,hdr,rows){const q=v=>'"'+String(v??'').replace(/"/g,'""')+'"';const csv='\ufeff'+[hdr,...rows].map(r=>r.map(q).join(',')).join('\r\n');dl(`${name}_${today()}.csv`,csv,'text/csv;charset=utf-8')}
+function backup(){dl(`yume-ops-backup_${today()}.json`,JSON.stringify(DB,null,1),'application/json')}
+function restore(inp){const f=inp.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{DB=Object.assign(load(),JSON.parse(r.result));save();location.reload()}catch(e){alert('File không hợp lệ')}};r.readAsText(f)}
+function dl(name,data,type){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([data],{type}));a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
+
+/* ---------------- khởi động ---------------- */
+document.getElementById('b-date').value=today();document.getElementById('c-date').value=today();document.getElementById('t-due').value=addDays(today(),7);
+renderToday();save();
+</script>
+</body>
+</html>
